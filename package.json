@@ -1,0 +1,21 @@
+{
+  "name": "y",
+  "version": "1.0.0",
+  "description": "Get release accurate @types/package for your dependencies",
+  "main": "dist/index.ts",
+  "bin": "dist/index.ts",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "build": "tsc",
+    "semantic-release": "semantic-release"
+  },
+  "author": "Chimzi Chiorlu",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^9.1.4",
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.6"
+  }
+}
