@@ -5,8 +5,8 @@ import { readFile } from "fs/promises";
 import { fork } from "child_process";
 
 let dependencies;
-const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bit', 'turbo'] as const;
-type PackageManager = typeof packageManagerOptions[number];
+const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bit'] as const;
+export type PackageManager = typeof packageManagerOptions[number];
 
 const defaultPackageManager: PackageManager = "npm";
 
@@ -25,16 +25,14 @@ const defaultPackageManager: PackageManager = "npm";
     }
   ])
 
-  console.log(packageManager)
-
 
   for (let dependency in dependencies) {
     let packageVersion: string = dependencies[dependency]
       .replace("~", "")
       .replace("^", "");
-    const forked = fork(path.resolve(__dirname, "./getReleaseDate.js"));
+    const forked = fork(path.resolve(__dirname, "./utils.js"));
     const message = dependency + ":" + packageVersion;
-    forked.send({ message });
+    forked.send({ message, packageManager });
     forked.on("message", (msg) => {
       console.log(dependency, msg)
     });

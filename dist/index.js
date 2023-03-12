@@ -11,7 +11,7 @@ const path_1 = __importDefault(require('path'));
 const promises_1 = require('fs/promises');
 const child_process_1 = require('child_process');
 let dependencies;
-const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bit', 'turbo'];
+const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bit'];
 const defaultPackageManager = 'npm';
 (async () => {
   const packageData = await (0, promises_1.readFile)('package.json', 'utf-8');
@@ -28,12 +28,11 @@ const defaultPackageManager = 'npm';
           choices: packageManagerOptions,
         },
       ]);
-  console.log(packageManager);
   for (let dependency in dependencies) {
     let packageVersion = dependencies[dependency].replace('~', '').replace('^', '');
-    const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './getReleaseDate.js'));
+    const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './utils.js'));
     const message = dependency + ':' + packageVersion;
-    forked.send({ message });
+    forked.send({ message, packageManager });
     forked.on('message', (msg) => {
       console.log(dependency, msg);
     });
