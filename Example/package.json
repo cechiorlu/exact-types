@@ -1,6 +1,6 @@
 {
   "name": "exact-types-sample",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Usage samples",
   "main": "index.js",
   "scripts": {
