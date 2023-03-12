@@ -33,8 +33,5 @@ const defaultPackageManager = 'npm';
     const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './utils.js'));
     const message = dependency + ':' + packageVersion;
     forked.send({ message, packageManager });
-    forked.on('message', (msg) => {
-      console.log(dependency, msg);
-    });
   }
 })();

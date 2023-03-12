@@ -1,12 +1,12 @@
-import { exec as ex } from 'child_process';
-import { PackageManager } from 'src';
+import { exec as ex, spawn } from 'child_process';
+import { IMessage, PackageManager } from 'src';
 import util from 'util';
 
 const exec = util.promisify(ex);
 
 type PackageVersions = {
   [version: string]: string;
-}
+};
 
 async function getDependencyReleaseDate(packageName: string, version: string) {
   let releaseLog, releaseDate;
@@ -22,7 +22,7 @@ async function getDependencyReleaseDate(packageName: string, version: string) {
   return releaseDate;
 }
 
-async function getTypesVersion(packageName: string, packageReleaseDate: Date) {
+async function getExactTypessPackage(packageName: string, packageReleaseDate: Date) {
   let releaseLog, typesVersion;
   let typesPackage = `@types/${packageName}`;
 
@@ -39,31 +39,39 @@ async function getTypesVersion(packageName: string, packageReleaseDate: Date) {
 }
 
 async function installPackage(packageName: string, packageManager: PackageManager) {
-  let installCommand;
+  let command = 'install',
+    done = false;
 
-  switch (packageManager) {
-    case 'bit':
-      installCommand = 'bit install -D';
-      break;
-    case 'npm':
-      installCommand = 'npm install -D';
-      break;
-    case 'pnpm':
-      installCommand = 'pnpm install -D';
-      break;
-    case 'yarn':
-      installCommand = 'yarn add -D';
-      break;
-    default:
-      installCommand = 'npm install -D';
+  if (packageManager === 'yarn') {
+    command = 'add';
   }
 
-  console.log('Starting Process...');
-  console.log(installCommand + ' ' + packageName);
-  console.log('installing ' + packageName);
+  // lazy workaround, refactor
+  if (packageName.includes('@types/typescript')) {
+    done = true;
+    return;
+  }
+
+  const installProcess = spawn(packageManager, [command, '-D', packageName]);
+
+  installProcess.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+  });
+
+  installProcess.stderr.on('data', (data) => {
+    done = true;
+    console.error(`stderr: ${data}`);
+  });
+
+  installProcess.on('close', (code) => {
+    console.log(`child process exited with code ${code}`);
+    done = true;
+  });
+
+  return done;
 }
 
-function getClosestPackageVersion (date: Date, packageVersions: PackageVersions ){
+function getClosestPackageVersion(date: Date, packageVersions: PackageVersions) {
   let closestVersion: string | null = null;
   let closestDateDiff: number | null = null;
 
@@ -81,22 +89,17 @@ function getClosestPackageVersion (date: Date, packageVersions: PackageVersions 
     throw new Error('No package versions found');
   }
 
-  if(closestVersion === 'modified'){
-    closestVersion = 'latest'
+  if (closestVersion === 'modified') {
+    closestVersion = 'latest';
   }
 
   return closestVersion;
 }
 
-process.on('message', async ({ message, packageManager }: { message: string; packageManager: PackageManager }) => {
-  const packageName = message.split(':')[0];
-  const version = message.split(':')[1];
-  const releaseDate = await getDependencyReleaseDate(packageName, version);
-  const typesPackage = releaseDate && (await getTypesVersion(packageName, releaseDate));
-  const response = typesPackage && (await installPackage(typesPackage, packageManager));
+process.on('message', async ({ packageName, packageVersion, packageManager }: IMessage) => {
+  const releaseDate = await getDependencyReleaseDate(packageName, packageVersion);
+  const typesPackage = releaseDate && (await getExactTypessPackage(packageName, releaseDate));
+  const done = typesPackage && installPackage(typesPackage, packageManager);
 
-  if (process.send) {
-    process.send({ response });
-  }
-  process.exit();
+  if (done) process.exit();
 });
