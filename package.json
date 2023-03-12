@@ -8,8 +8,8 @@
     "typescript",
     "tool"
   ],
-  "main": "dist/index.ts",
-  "bin": "dist/index.ts",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
   "scripts": {
     "start": "tsc && node dist/index.js",
     "build": "tsc",
