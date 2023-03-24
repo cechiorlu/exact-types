@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#! /usr/bin/env node
+
 import inquirer from 'inquirer';
 import path from 'path';
 import { readFile } from 'fs/promises';

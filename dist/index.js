@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#! /usr/bin/env node
 'use strict';
 var __importDefault =
   (this && this.__importDefault) ||
@@ -31,7 +31,6 @@ const defaultPackageManager = 'npm';
   for (let dependency in dependencies) {
     let packageVersion = dependencies[dependency].replace('~', '').replace('^', '');
     const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './utils.js'));
-    const message = dependency + ':' + packageVersion;
-    forked.send({ message, packageManager });
+    forked.send({ packageName: dependency, packageVersion, packageManager });
   }
 })();
