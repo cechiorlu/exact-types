@@ -34,8 +34,10 @@ const defaultPackageManager: PackageManager = 'npm';
       ]);
 
   for (let dependency in dependencies) {
-    let packageVersion: string = dependencies[dependency].replace('~', '').replace('^', '');
-    const forked = fork(path.resolve(__dirname, './utils.js'));
-    forked.send({ packageName: dependency, packageVersion, packageManager });
+    if(!dependency.includes('@')){
+      let packageVersion: string = dependencies[dependency].replace('~', '').replace('^', '');
+      const forked = fork(path.resolve(__dirname, './utils.js'));
+      forked.send({ packageName: dependency, packageVersion, packageManager });
+    }
   }
 })();

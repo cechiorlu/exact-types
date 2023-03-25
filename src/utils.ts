@@ -5,11 +5,11 @@ import util from 'util';
 const exec = util.promisify(ex);
 
 type PackageVersions = {
-  [version: string]: string;
+  [version: string]: string | number | Date;
 };
 
 async function getDependencyReleaseDate(packageName: string, version: string) {
-  let releaseLog, releaseDate;
+  let releaseLog: PackageVersions, releaseDate: Date;
   // Get version release dates for packages
   const { stdout, stderr } = await exec(`npm view ${packageName} time --json`);
   if (stderr) {
@@ -23,7 +23,7 @@ async function getDependencyReleaseDate(packageName: string, version: string) {
 }
 
 async function getExactTypessPackage(packageName: string, packageReleaseDate: Date) {
-  let releaseLog, typesVersion;
+  let releaseLog: PackageVersions, typesVersion: string;
   let typesPackage = `@types/${packageName}`;
 
   const { stdout, stderr } = await exec(`npm view ${typesPackage} time --json`);
@@ -51,7 +51,6 @@ async function installPackage(packageName: string, packageManager: PackageManage
     done = true;
     return;
   }
-
   const installProcess = spawn(packageManager, [command, '-D', packageName]);
 
   installProcess.stdout.on('data', (data) => {

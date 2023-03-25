@@ -29,8 +29,10 @@ const defaultPackageManager = 'npm';
         },
       ]);
   for (let dependency in dependencies) {
-    let packageVersion = dependencies[dependency].replace('~', '').replace('^', '');
-    const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './utils.js'));
-    forked.send({ packageName: dependency, packageVersion, packageManager });
+    if (!dependency.includes('@')) {
+      let packageVersion = dependencies[dependency].replace('~', '').replace('^', '');
+      const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './utils.js'));
+      forked.send({ packageName: dependency, packageVersion, packageManager });
+    }
   }
 })();
