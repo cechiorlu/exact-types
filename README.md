@@ -7,7 +7,7 @@ Install release accurate @types/package for your dependencies.
 ## Installation
 
 ```sh
-yarn global add exact-types
+npm i -g exact-types
 ```
 
 ## Usage

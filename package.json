@@ -6,7 +6,9 @@
     "CLI",
     "Development",
     "typescript",
-    "tool"
+    "devtool",
+    "types",
+    "type-match"
   ],
   "main": "dist/index.js",
   "bin": {

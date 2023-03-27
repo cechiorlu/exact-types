@@ -11,7 +11,7 @@ const path_1 = __importDefault(require('path'));
 const promises_1 = require('fs/promises');
 const child_process_1 = require('child_process');
 let dependencies;
-const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bit'];
+const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bower'];
 const defaultPackageManager = 'npm';
 (async () => {
   const packageData = await (0, promises_1.readFile)('package.json', 'utf-8');

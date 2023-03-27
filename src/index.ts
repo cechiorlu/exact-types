@@ -6,7 +6,7 @@ import { readFile } from 'fs/promises';
 import { fork } from 'child_process';
 
 let dependencies;
-const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bit'] as const;
+const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bower'] as const;
 export type PackageManager = (typeof packageManagerOptions)[number];
 export interface IMessage {
   packageName: string;

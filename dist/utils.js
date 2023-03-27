@@ -19,7 +19,7 @@ async function getDependencyReleaseDate(packageName, version) {
   releaseDate = new Date(releaseLog[version]);
   return releaseDate;
 }
-async function getExactTypessPackage(packageName, packageReleaseDate) {
+async function getExactTypesPackage(packageName, packageReleaseDate) {
   let releaseLog, typesVersion;
   let typesPackage = `@types/${packageName}`;
   const { stdout, stderr } = await exec(`npm view ${typesPackage} time --json`);
@@ -47,7 +47,6 @@ async function installPackage(packageName, packageManager) {
     console.log(`stdout: ${data}`);
   });
   installProcess.stderr.on('data', (data) => {
-    done = true;
     console.error(`stderr: ${data}`);
   });
   installProcess.on('close', (code) => {
@@ -77,7 +76,7 @@ function getClosestPackageVersion(date, packageVersions) {
 }
 process.on('message', async ({ packageName, packageVersion, packageManager }) => {
   const releaseDate = await getDependencyReleaseDate(packageName, packageVersion);
-  const typesPackage = releaseDate && (await getExactTypessPackage(packageName, releaseDate));
-  const done = typesPackage && installPackage(typesPackage, packageManager);
+  const typesPackage = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
+  const done = typesPackage && (await installPackage(typesPackage, packageManager));
   if (done) process.exit();
 });
