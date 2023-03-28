@@ -97,6 +97,6 @@ function getClosestPackageVersion(date: Date, packageVersions: PackageVersions) 
 process.on('message', async ({ packageName, packageVersion, packageManager }: IMessage) => {
   const releaseDate = await getDependencyReleaseDate(packageName, packageVersion);
   const typesPackage = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
-  const done = typesPackage && await installPackage(typesPackage, packageManager);
-  if (done) process.exit();
+  typesPackage && await installPackage(typesPackage, packageManager);
+  // if (done) process.exit();
 });

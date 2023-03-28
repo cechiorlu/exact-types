@@ -17,5 +17,5 @@ Choose your preferred package manager, or use the default (npm) by running `npx 
 
 ## Getting help
 
-Exact-types works for 'npm', 'yarn', 'pnpm' and 'bit' on macOS, Windows, and Linux.<br>
+Exact-types works for 'npm', 'yarn', 'pnpm' and 'bower' on macOS, Windows, and Linux.<br>
 If you have questions, concerns, bug reports, etc, please [file an issue](https://github.com/cechiorlu/exact-types/issues/new).<br>
