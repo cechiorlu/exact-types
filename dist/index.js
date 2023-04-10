@@ -17,6 +17,7 @@ const defaultPackageManager = 'npm';
   const packageData = await (0, promises_1.readFile)('package.json', 'utf-8');
   const packageJSON = await JSON.parse(packageData);
   dependencies = packageJSON === null || packageJSON === void 0 ? void 0 : packageJSON.dependencies;
+  const packageTypes = {};
   const useDefault = process.argv[2] === '-y';
   const { packageManager } = useDefault
     ? defaultPackageManager
@@ -33,6 +34,10 @@ const defaultPackageManager = 'npm';
       let packageVersion = dependencies[dependency].replace('~', '').replace('^', '');
       const forked = (0, child_process_1.fork)(path_1.default.resolve(__dirname, './scripts.js'));
       forked.send({ packageName: dependency, packageVersion, packageManager });
+      forked.on('message', async ({ typesPackage, typesVersion }) => {
+        packageTypes[typesPackage] = typesVersion;
+      });
     }
   }
+  console.log(packageTypes);
 })();

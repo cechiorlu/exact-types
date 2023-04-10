@@ -1,5 +1,5 @@
-import { exec as ex, spawn } from 'child_process';
-import { IMessage, PackageManager } from 'src';
+import { exec as ex } from 'child_process';
+import { IMessage } from 'src';
 import util from 'util';
 
 const exec = util.promisify(ex);
@@ -26,6 +26,7 @@ async function getExactTypesPackage(packageName: string, packageReleaseDate: Dat
   let releaseLog: PackageVersions, typesVersion: string;
   let typesPackage = `@types/${packageName}`;
 
+  console.log(typesPackage)
   const { stdout, stderr } = await exec(`npm view ${typesPackage} time --json`);
   if (stderr) {
     console.error(stderr);
@@ -33,41 +34,40 @@ async function getExactTypesPackage(packageName: string, packageReleaseDate: Dat
   }
   releaseLog = await JSON.parse(stdout);
   typesVersion = getClosestPackageVersion(packageReleaseDate, releaseLog);
-  typesPackage += `@${typesVersion}`;
 
-  return typesPackage;
+  return { typesPackage, typesVersion };
 }
 
-async function installPackage(packageName: string, packageManager: PackageManager) {
-  let command = 'install',
-    done = false;
+// async function installPackage(packageName: string, packageManager: PackageManager) {
+//   let command = 'install',
+//     done = false;
 
-  if (packageManager === 'yarn') {
-    command = 'add';
-  }
+//   if (packageManager === 'yarn') {
+//     command = 'add';
+//   }
 
-  // lazy workaround, refactor
-  if (packageName.includes('@types/typescript')) {
-    done = true;
-    return;
-  }
-  const installProcess = spawn(packageManager, [command, '-D', packageName]);
+//   // lazy workaround, refactor
+//   if (packageName.includes('@types/typescript')) {
+//     done = true;
+//     return;
+//   }
+//   const installProcess = spawn(packageManager, [command, '-D', packageName]);
 
-  installProcess.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
+//   installProcess.stdout.on('data', (data) => {
+//     console.log(`stdout: ${data}`);
+//   });
 
-  installProcess.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
-  });
+//   installProcess.stderr.on('data', (data) => {
+//     console.error(`stderr: ${data}`);
+//   });
 
-  installProcess.on('close', (code) => {
-    console.log(`child process exited with code ${code}`);
-    done = true;
-  });
+//   installProcess.on('close', (code) => {
+//     console.log(`child process exited with code ${code}`);
+//     done = true;
+//   });
 
-  return done;
-}
+//   return done;
+// }
 
 function getClosestPackageVersion(date: Date, packageVersions: PackageVersions) {
   let closestVersion: string | null = null;
@@ -94,9 +94,12 @@ function getClosestPackageVersion(date: Date, packageVersions: PackageVersions) 
   return closestVersion;
 }
 
-process.on('message', async ({ packageName, packageVersion, packageManager }: IMessage) => {
+process.on('message', async ({ packageName, packageVersion }: IMessage) => {
   const releaseDate = await getDependencyReleaseDate(packageName, packageVersion);
-  const typesPackage = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
-  typesPackage && await installPackage(typesPackage, packageManager);
-  // if (done) process.exit();
+  const typesData = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
+  if (process.send && typesData?.typesVersion) {
+    process.send(typesData);
+  }
+  // typesPackage && await installPackage(typesPackage, packageManager);
+  // process.exit();
 });

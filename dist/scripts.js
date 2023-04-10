@@ -22,6 +22,7 @@ async function getDependencyReleaseDate(packageName, version) {
 async function getExactTypesPackage(packageName, packageReleaseDate) {
   let releaseLog, typesVersion;
   let typesPackage = `@types/${packageName}`;
+  console.log(typesPackage);
   const { stdout, stderr } = await exec(`npm view ${typesPackage} time --json`);
   if (stderr) {
     console.error(stderr);
@@ -29,31 +30,7 @@ async function getExactTypesPackage(packageName, packageReleaseDate) {
   }
   releaseLog = await JSON.parse(stdout);
   typesVersion = getClosestPackageVersion(packageReleaseDate, releaseLog);
-  typesPackage += `@${typesVersion}`;
-  return typesPackage;
-}
-async function installPackage(packageName, packageManager) {
-  let command = 'install',
-    done = false;
-  if (packageManager === 'yarn') {
-    command = 'add';
-  }
-  if (packageName.includes('@types/typescript')) {
-    done = true;
-    return;
-  }
-  const installProcess = (0, child_process_1.spawn)(packageManager, [command, '-D', packageName]);
-  installProcess.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
-  installProcess.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
-  });
-  installProcess.on('close', (code) => {
-    console.log(`child process exited with code ${code}`);
-    done = true;
-  });
-  return done;
+  return { typesPackage, typesVersion };
 }
 function getClosestPackageVersion(date, packageVersions) {
   let closestVersion = null;
@@ -74,8 +51,10 @@ function getClosestPackageVersion(date, packageVersions) {
   }
   return closestVersion;
 }
-process.on('message', async ({ packageName, packageVersion, packageManager }) => {
+process.on('message', async ({ packageName, packageVersion }) => {
   const releaseDate = await getDependencyReleaseDate(packageName, packageVersion);
-  const typesPackage = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
-  typesPackage && (await installPackage(typesPackage, packageManager));
+  const typesData = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
+  if (process.send && (typesData === null || typesData === void 0 ? void 0 : typesData.typesVersion)) {
+    process.send(typesData);
+  }
 });

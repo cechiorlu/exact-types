@@ -20,6 +20,7 @@ const defaultPackageManager: PackageManager = 'npm';
   const packageData = await readFile('package.json', 'utf-8');
   const packageJSON = await JSON.parse(packageData);
   dependencies = packageJSON?.dependencies;
+  const packageTypes: { [key: string]: string } = {};
   const useDefault = process.argv[2] === '-y';
 
   const { packageManager }: { packageManager: PackageManager } = useDefault
@@ -34,10 +35,16 @@ const defaultPackageManager: PackageManager = 'npm';
       ]);
 
   for (let dependency in dependencies) {
-    if(!dependency.includes('@')){
+    if (!dependency.includes('@')) {
       let packageVersion: string = dependencies[dependency].replace('~', '').replace('^', '');
       const forked = fork(path.resolve(__dirname, './scripts.js'));
       forked.send({ packageName: dependency, packageVersion, packageManager });
+      forked.on('message', async ({ typesPackage, typesVersion }: { typesPackage: string; typesVersion: string }) => {
+        packageTypes[typesPackage] = typesVersion;
+      });
     }
   }
+
+  console.log(packageTypes)
+  // write in package.json
 })();
