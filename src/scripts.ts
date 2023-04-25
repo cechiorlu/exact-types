@@ -1,6 +1,8 @@
 import { exec as ex } from 'child_process';
 import { IMessage } from 'src';
 import util from 'util';
+import axios from 'axios';
+import { readFile, writeFile } from 'fs/promises';
 
 const exec = util.promisify(ex);
 
@@ -26,48 +28,18 @@ async function getExactTypesPackage(packageName: string, packageReleaseDate: Dat
   let releaseLog: PackageVersions, typesVersion: string;
   let typesPackage = `@types/${packageName}`;
 
-  console.log(typesPackage)
-  const { stdout, stderr } = await exec(`npm view ${typesPackage} time --json`);
-  if (stderr) {
-    console.error(stderr);
-    return;
-  }
-  releaseLog = await JSON.parse(stdout);
-  typesVersion = getClosestPackageVersion(packageReleaseDate, releaseLog);
-
-  return { typesPackage, typesVersion };
+  console.log(typesPackage);
+  // get request for release log
+  try {
+    const response = await axios.get(`https://registry.npmjs.org/@types%2f${packageName}`);
+    if (response.status === 200) {
+      releaseLog = response.data.time;
+      typesVersion = getClosestPackageVersion(packageReleaseDate, releaseLog);
+      return { typesPackage, typesVersion };
+    }
+  } catch (error) {}
+  return;
 }
-
-// async function installPackage(packageName: string, packageManager: PackageManager) {
-//   let command = 'install',
-//     done = false;
-
-//   if (packageManager === 'yarn') {
-//     command = 'add';
-//   }
-
-//   // lazy workaround, refactor
-//   if (packageName.includes('@types/typescript')) {
-//     done = true;
-//     return;
-//   }
-//   const installProcess = spawn(packageManager, [command, '-D', packageName]);
-
-//   installProcess.stdout.on('data', (data) => {
-//     console.log(`stdout: ${data}`);
-//   });
-
-//   installProcess.stderr.on('data', (data) => {
-//     console.error(`stderr: ${data}`);
-//   });
-
-//   installProcess.on('close', (code) => {
-//     console.log(`child process exited with code ${code}`);
-//     done = true;
-//   });
-
-//   return done;
-// }
 
 function getClosestPackageVersion(date: Date, packageVersions: PackageVersions) {
   let closestVersion: string | null = null;
@@ -94,12 +66,28 @@ function getClosestPackageVersion(date: Date, packageVersions: PackageVersions) 
   return closestVersion;
 }
 
+async function updateDevDependencies(typesPackage: string, typesVersion: string) {
+  try {
+    let devDependencies;
+    const packageData = await readFile('package.json', 'utf-8');
+    const packageJSON = await JSON.parse(packageData);
+    devDependencies = packageJSON?.devDependencies;
+    devDependencies[typesPackage] = typesVersion;
+    await writeFile('package.json', packageJSON, 'utf-8');
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 process.on('message', async ({ packageName, packageVersion }: IMessage) => {
   const releaseDate = await getDependencyReleaseDate(packageName, packageVersion);
   const typesData = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
-  if (process.send && typesData?.typesVersion) {
-    process.send(typesData);
+  if (typesData) {
+    const { typesPackage, typesVersion } = typesData;
+    await updateDevDependencies(typesPackage, typesVersion);
+    if (process.send) {
+      process.send({ typesPackage, typesVersion });
+    }
   }
-  // typesPackage && await installPackage(typesPackage, packageManager);
-  // process.exit();
+  process.exit();
 });

@@ -1,6 +1,6 @@
 {
   "name": "exact-types",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Get release accurate @types/package for your dependencies",
   "keywords": [
     "CLI",
@@ -23,11 +23,10 @@
   "author": "Chimzi Chiorlu",
   "license": "MIT",
   "dependencies": {
-    "inquirer": "^8.2.5",
+    "axios": "^1.3.5",
     "typescript": "^4.9.5"
   },
   "devDependencies": {
-    "@types/inquirer": "9.0.3",
     "@types/node": "^18.14.6",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.2",

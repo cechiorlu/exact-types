@@ -1,50 +1,36 @@
 #! /usr/bin/env node
 
-import inquirer from 'inquirer';
 import path from 'path';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { fork } from 'child_process';
 
-let dependencies;
-const packageManagerOptions = ['npm', 'yarn', 'pnpm', 'bower'] as const;
-export type PackageManager = (typeof packageManagerOptions)[number];
+let dependencies, devDependencies;
 export interface IMessage {
   packageName: string;
   packageVersion: string;
-  packageManager: PackageManager;
 }
-
-const defaultPackageManager: PackageManager = 'npm';
 
 (async () => {
   const packageData = await readFile('package.json', 'utf-8');
   const packageJSON = await JSON.parse(packageData);
   dependencies = packageJSON?.dependencies;
-  const packageTypes: { [key: string]: string } = {};
-  const useDefault = process.argv[2] === '-y';
+  devDependencies = packageJSON?.devDependencies;
+  const hasDevDependencies = !!(devDependencies && Object.keys(devDependencies).length);
 
-  const { packageManager }: { packageManager: PackageManager } = useDefault
-    ? defaultPackageManager
-    : await inquirer.prompt([
-        {
-          type: 'list',
-          message: 'Pick your package manager:',
-          name: 'packageManager',
-          choices: packageManagerOptions,
-        },
-      ]);
+  if (!hasDevDependencies) {
+    packageJSON['devDependencies'] = {};
+  }
+
+  await writeFile('package.json', packageJSON, 'utf-8');
 
   for (let dependency in dependencies) {
     if (!dependency.includes('@')) {
       let packageVersion: string = dependencies[dependency].replace('~', '').replace('^', '');
       const forked = fork(path.resolve(__dirname, './scripts.js'));
-      forked.send({ packageName: dependency, packageVersion, packageManager });
+      forked.send({ packageName: dependency, packageVersion });
       forked.on('message', async ({ typesPackage, typesVersion }: { typesPackage: string; typesVersion: string }) => {
-        packageTypes[typesPackage] = typesVersion;
+        console.log(`- ${typesPackage}:${typesVersion} successfully added`)
       });
     }
   }
-
-  console.log(packageTypes)
-  // write in package.json
 })();
