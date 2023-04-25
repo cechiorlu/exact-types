@@ -84,7 +84,9 @@ process.on('message', async ({ packageName, packageVersion }: IMessage) => {
   const typesData = releaseDate && (await getExactTypesPackage(packageName, releaseDate));
   if (typesData) {
     const { typesPackage, typesVersion } = typesData;
-    await updateDevDependencies(typesPackage, typesVersion);
+    if(typesPackage && typesVersion){
+      await updateDevDependencies(typesPackage, typesVersion);
+    }
     if (process.send) {
       process.send({ typesPackage, typesVersion });
     }
