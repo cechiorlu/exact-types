@@ -3,6 +3,7 @@ import { IMessage } from 'src';
 import util from 'util';
 import axios from 'axios';
 import { readFile, writeFile } from 'fs/promises';
+import { json } from 'node:stream/consumers';
 
 const exec = util.promisify(ex);
 
@@ -73,7 +74,8 @@ async function updateDevDependencies(typesPackage: string, typesVersion: string)
     const packageJSON = await JSON.parse(packageData);
     devDependencies = packageJSON?.devDependencies;
     devDependencies[typesPackage] = typesVersion;
-    await writeFile('package.json', packageJSON, 'utf-8');
+    const updatedPackageData = JSON.stringify(packageJSON)
+    await writeFile('package.json', updatedPackageData, 'utf-8');
   } catch (err) {
     console.log(err);
   }

@@ -19,9 +19,10 @@ export interface IMessage {
 
   if (!hasDevDependencies) {
     packageJSON['devDependencies'] = {};
+    let packageData = JSON.stringify(packageJSON)
+    await writeFile('package.json', packageData, 'utf-8');
   }
 
-  await writeFile('package.json', packageJSON, 'utf-8');
 
   for (let dependency in dependencies) {
     if (!dependency.includes('@')) {
