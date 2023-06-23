@@ -28,7 +28,6 @@ async function getExactTypesPackage(packageName: string, packageReleaseDate: Dat
   let releaseLog: PackageVersions, typesVersion: string;
   let typesPackage = `@types/${packageName}`;
 
-  console.log(typesPackage);
   // get request for release log
   try {
     const response = await axios.get(`https://registry.npmjs.org/@types%2f${packageName}`);
